@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define MAX_SIZE 255
+
 int user_menu(){
 	int input;
 
@@ -19,8 +21,8 @@ int user_menu(){
 void add_user_info(){
 	FILE *fp;
 	int age;
-	char name[255];
-	char email[255];
+	char name[MAX_SIZE];
+	char email[MAX_SIZE];
 	char ch;
 
 	fp = fopen("user.txt","a");
@@ -30,7 +32,7 @@ void add_user_info(){
 	}
 	while(1){	
 		printf("이름 : ");
-		fgets(name, 255, stdin);
+		fgets(name, MAX_SIZE, stdin);
 		name[strlen(name)-1] = '\0';
 		printf("나이 : ");
 		scanf("%d", &age);	
@@ -52,25 +54,33 @@ void mod_user_info(){
 	printf("mod\n");
 }
 
-void del_user_info(){
-	FILE *fp1, *fp2;
+void del_user_info(){ // 미구현
+	char search[MAX_SIZE];
+	FILE *in_fp, *out_fp;
+	char buffer[MAX_SIZE];
 
-	if((fp1 = fopen("user.txt", "r")) == NULL){
+	printf("제거할 회원 : "); 	//함수가 끝나도 한번 더 실행됨
+															//확인 필요
+	scanf(" %[^\n]s", search);
+
+	if((in_fp = fopen("user.txt", "r")) == NULL){
 		fprintf(stderr,"원본 파일을 열 수 없습니다.\n");
 		exit(1);
 	}	
 
-	if((fp2 = fopen("inser.txt", "w")) == NULL){
+	if((out_fp = fopen("inser.txt", "w")) == NULL){
 		fprintf(stderr,"복사 파일을 열 수 없습니다.\n");
 		exit(1);
 	}
-	char c;
-	while((c = fgetc(fp1)) != EOF)
-		fputc(c,fp2);
-	
-	fclose(fp1);
-	fclose(fp2);
-	printf("...complete\n");
+	//제대로 작동하지 않음 다시 확인해 볼 필요 있음
+	while(fgets(buffer, MAX_SIZE, in_fp) != NULL){
+		if(strstr(buffer, search) != NULL)
+			fputs(buffer, out_fp);
+	}	
+
+	//삭제한 임시 파일의 값을 원본 파일에 복사하는코드
+	fclose(in_fp);
+	fclose(out_fp);
 }
 
 void print_user_info(){
@@ -83,7 +93,7 @@ void print_user_info(){
 		exit(1);
 	}
 
-	while ((c = fgetc(fp)) != EOF)
+	while((c = fgetc(fp)) != EOF)
 		printf("%c", c);
 
 	fclose(fp);
