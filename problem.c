@@ -4,6 +4,27 @@
 
 #define MAX_SIZE 255
 
+void file_copy(){
+	FILE *ori_fp, *copy_fp;
+
+	if((ori_fp = fopen("user.txt", "w")) == NULL){
+		fprintf(stderr,"원본 파일을 열 수 없습니다.\n");
+		exit(1);
+	}	
+
+	if((copy_fp = fopen("tmp.txt", "r")) == NULL){
+		fprintf(stderr,"복사 파일을 열 수 없습니다.\n");
+		exit(1);
+	}
+
+	int c;
+	while((c = fgetc(copy_fp)) != EOF)
+		fputc(c, ori_fp);
+
+	fclose(ori_fp);
+	fclose(copy_fp);
+}
+
 int user_menu(){
 	int input;
 
@@ -18,6 +39,35 @@ int user_menu(){
 	return input;
 }
 
+int is_email_fake(char email[]){
+	int len = strlen(email);
+	int is_index_At = -1;
+	int after_dot = -1;
+
+	for(int i = 0; i < len; i++){
+		if(email[i] == '@'){
+			is_index_At = i;
+			break;
+		}
+	}
+	if(is_index_At == 0 || is_index_At == -1)
+		return 1;
+
+	for(int i = is_index_At + 1; i < len; i++){
+		if(email[i] == '.'){
+			after_dot = i;
+			break;	
+		}	
+	}
+	if(after_dot == is_index_At + 1)
+		return 1;
+
+	if(after_dot == len - 1)
+		return 1;
+
+	return 0;
+}
+
 void add_user_info(){
 	FILE *fp;
 	int age;
@@ -30,6 +80,7 @@ void add_user_info(){
 		printf("파일을 열 수 없습니다\n");
 		exit(1);
 	}
+
 	while(1){	
 		printf("이름 : ");
 		fgets(name, MAX_SIZE, stdin);
@@ -38,29 +89,85 @@ void add_user_info(){
 		scanf("%d", &age);	
 		printf("이메일 : ");
 		scanf("%s%*c", email);	
+		int jud = is_email_fake(email);
+		if(jud){
+			printf("잘못된 이메일 형식입니다\n");
+			break;
+		}
 
 		fprintf(fp,"%s / %d / %s\n", name, age, email);
 
 		printf("계속 입력 할까요?(Y/N)");
 		ch = getchar();
-		scanf("%*c");
+		scanf("%*c");	
 		if(ch == 'N')
 			break;
 	}
+
 	fclose(fp);
 }
 
 void mod_user_info(){
-	printf("mod\n");
+	FILE *in_fp, *out_fp;
+	int age, count = 0;
+	char search[MAX_SIZE], buffer[MAX_SIZE];
+	char name[MAX_SIZE], email[MAX_SIZE];
+	char *tmp;
+
+	printf("수정할 사람의 이름을 입력해주세요 : "); 
+	fgets(search, MAX_SIZE, stdin);
+	search[strlen(search)-1] = '\0';
+
+	if((in_fp = fopen("user.txt", "r")) == NULL){
+		fprintf(stderr,"원본 파일을 열 수 없습니다.\n");
+		exit(1);
+	}	
+
+	if((out_fp = fopen("tmp.txt", "w")) == NULL){
+		fprintf(stderr,"임시 파일을 열 수 없습니다.\n");
+		exit(1);
+	}
+
+	while(fgets(buffer, MAX_SIZE, in_fp) != NULL){
+		if(strstr(buffer, search) != NULL){
+			printf("사용자 %s 을 수정합니다.\n", search);
+
+			printf("이름 : ");
+			fgets(name, MAX_SIZE, stdin);
+			name[strlen(name)-1] = '\0';
+			printf("나이 : ");
+			scanf("%d", &age);	
+			printf("이메일 : ");
+			scanf("%s%*c", email);	
+			int jud = is_email_fake(email);
+			if(jud){
+				printf("잘못된 이메일 형식입니다\n");
+				return ;
+			}
+			fprintf(out_fp,"%s / %d / %s\n", name, age, email);
+			count++;
+		}
+		else
+			fputs(buffer, out_fp);
+	}	
+	if(count == 0)
+		printf("사용자 %s 은 없습니다.\n", search);
+	else
+		printf("수정 완료 되었습니다\n");
+
+	fclose(in_fp);
+	fclose(out_fp);
+
+	file_copy();
 }
 
-void del_user_info(){ // 미구현
+void del_user_info(){ 
 	char search[MAX_SIZE];
 	FILE *in_fp, *out_fp;
 	char buffer[MAX_SIZE];
 
-	printf("제거할 회원 : "); 	//함수가 끝나도 한번 더 실행됨
-															//확인 필요
+	printf("제거할 회원 : "); 
+	
 	scanf(" %[^\n]s", search);
 
 	if((in_fp = fopen("user.txt", "r")) == NULL){
@@ -68,19 +175,20 @@ void del_user_info(){ // 미구현
 		exit(1);
 	}	
 
-	if((out_fp = fopen("inser.txt", "w")) == NULL){
-		fprintf(stderr,"복사 파일을 열 수 없습니다.\n");
+	if((out_fp = fopen("tmp.txt", "w")) == NULL){
+		fprintf(stderr,"임시  파일을 열 수 없습니다.\n");
 		exit(1);
 	}
-	//제대로 작동하지 않음 다시 확인해 볼 필요 있음
+
 	while(fgets(buffer, MAX_SIZE, in_fp) != NULL){
-		if(strstr(buffer, search) != NULL)
+		if(strstr(buffer, search) == NULL)
 			fputs(buffer, out_fp);
 	}	
 
-	//삭제한 임시 파일의 값을 원본 파일에 복사하는코드
 	fclose(in_fp);
 	fclose(out_fp);
+
+	file_copy();
 }
 
 void print_user_info(){
