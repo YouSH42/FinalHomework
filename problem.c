@@ -144,11 +144,11 @@ void mod_user_info(){
 			int jud = is_false(age, email);
 			if(jud == 1){
 				printf("잘못된 이메일 형식입니다\n");
-				return ;
+				return ;  // continue
 			}
 			else if(jud == 2){
 				printf("나이가 너무 많습니다\n");
-				return ;
+				return ;  //continue
 			}
 			fprintf(out_fp,"%s/%d/%s\n", name, age, email);
 			count++;
