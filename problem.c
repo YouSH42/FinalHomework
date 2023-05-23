@@ -39,30 +39,28 @@ int user_menu(){
 	return input;
 }
 
-int is_email_fake(char email[]){
+int is_false(int age, char email[]){
 	int len = strlen(email);
-	int is_index_At = -1;
-	int after_dot = -1;
+	int i = 0, at_cnt = 0, dot_cnt = 0 , dot = -1, index_At = -1;
 
-	for(int i = 0; i < len; i++){
+	if(age > 200)
+		return 2;
+
+	for(i = 0; i < len; i++){
 		if(email[i] == '@'){
-			is_index_At = i;
-			break;
+			index_At = i;
+			at_cnt++;
+		}
+		else if(email[i] == '.'){
+			dot = i;
+			dot_cnt++;
 		}
 	}
-	if(is_index_At == 0 || is_index_At == -1)
+	if(dot == -1 || index_At == -1 || dot < index_At || index_At == 0)
 		return 1;
-
-	for(int i = is_index_At + 1; i < len; i++){
-		if(email[i] == '.'){
-			after_dot = i;
-			break;	
-		}	
-	}
-	if(after_dot == is_index_At + 1)
+	else if(index_At + 1 == dot || dot + 1 == len)
 		return 1;
-
-	if(after_dot == len - 1)
+	else if(at_cnt >= 2 || dot_cnt >= 2)
 		return 1;
 
 	return 0;
@@ -89,13 +87,17 @@ void add_user_info(){
 		scanf("%d", &age);	
 		printf("이메일 : ");
 		scanf("%s%*c", email);	
-		int jud = is_email_fake(email);
-		if(jud){
+		int jud = is_false(age, email);
+		if(jud == 1){
 			printf("잘못된 이메일 형식입니다\n");
-			break;
+			break ;
+		}
+		else if(jud == 2){
+			printf("나이가 너무 많습니다\n");
+			break ;	
 		}
 
-		fprintf(fp,"%s / %d / %s\n", name, age, email);
+		fprintf(fp,"%s/%d/%s\n", name, age, email);
 
 		printf("계속 입력 할까요?(Y/N)");
 		ch = getchar();
@@ -139,12 +141,16 @@ void mod_user_info(){
 			scanf("%d", &age);	
 			printf("이메일 : ");
 			scanf("%s%*c", email);	
-			int jud = is_email_fake(email);
-			if(jud){
+			int jud = is_false(age, email);
+			if(jud == 1){
 				printf("잘못된 이메일 형식입니다\n");
 				return ;
 			}
-			fprintf(out_fp,"%s / %d / %s\n", name, age, email);
+			else if(jud == 2){
+				printf("나이가 너무 많습니다\n");
+				return ;
+			}
+			fprintf(out_fp,"%s/%d/%s\n", name, age, email);
 			count++;
 		}
 		else
@@ -167,7 +173,7 @@ void del_user_info(){
 	char buffer[MAX_SIZE];
 
 	printf("제거할 회원 : "); 
-	
+
 	scanf(" %[^\n]s", search);
 
 	if((in_fp = fopen("user.txt", "r")) == NULL){
@@ -234,8 +240,8 @@ void user_request(int input){
 
 int main(int argc, char *argv[]){
 	int input = 0;
-	input = user_menu();
 
+	input = user_menu();
 	user_request(input);
 
 	return 0;
