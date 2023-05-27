@@ -21,15 +21,16 @@ int show_select(){
 
 void player_info_record(){
 	int i, age, hp, all_cnt = 0;
+ 	static int user_cnt;
 	double x, y;
 	char ch = 'Y', pl_ID[MAX_SIZE], alliance[ALLIANCE][MAX_SIZE],\
-					 	fl_name[MAX_SIZE];
+						fl_name[MAX_SIZE];
 	FILE *fp = NULL;
 
-	if((fp = fopen("user.txt", "wb")) == NULL){
+	if((fp = fopen("user.txt", "ab")) == NULL){
 		fprintf(stderr,"원본 파일을 열 수 없습니다.\n");
 		exit(1);
-	}	
+	}
 
 	printf("ID 를 입력하세요:");
 	scanf("%s%*c", pl_ID);
@@ -49,46 +50,51 @@ void player_info_record(){
 		ch = getchar();
 		scanf("%*c");		//\n의 값을 무시하는 함수
 	}
-	fwrite(pl_ID, sizeof(char[MAX_SIZE]), 1, fp);
+	fwrite(pl_ID, sizeof(char), MAX_SIZE, fp);
 	fwrite(&age, sizeof(int), 1, fp);
 	fwrite(&hp, sizeof(int), 1, fp);
 	fwrite(&x, sizeof(double), 1, fp);
 	fwrite(&y, sizeof(double), 1, fp);
 	fwrite(&all_cnt, sizeof(int), 1, fp);
 	for(i = 0; i < all_cnt; i++)
-		fwrite(alliance[i], sizeof(char[MAX_SIZE]), 1, fp);
+		fwrite(alliance[i], sizeof(char), MAX_SIZE, fp);
+	user_cnt++;
+	fwrite(&user_cnt, sizeof(int), 1, fp);
 	printf("완료되었습니다.\n");
 	fclose(fp);
 }
 
-	//printf("id : %s age : %d hp: %d x:%.3f y:%.3f all_cnt : %d\n",\
-	pl_ID, age, hp, x, y, all_cnt);	
-
 void player_info_check(){
-	int i, age, hp, all_cnt;
+	int i, age, hp, all_cnt, user_cnt;
 	double x, y;
 	char pl_ID[MAX_SIZE], alliance[ALLIANCE][MAX_SIZE];
 	FILE *fp = NULL;
-
 	if((fp = fopen("user.txt", "rb")) == NULL){
 		fprintf(stderr,"원본 파일을 열 수 없습니다.\n");
 		exit(1);
 	}	
-	
-	fread(pl_ID, sizeof(char[MAX_SIZE]), 1, fp);
-	fread(&age, sizeof(int), 1, fp);
-	fread(&hp, sizeof(int), 1, fp);
-	fread(&x, sizeof(double), 1, fp);
-	fread(&y, sizeof(double), 1, fp);
-	fread(&all_cnt, sizeof(int), 1, fp);
-	for(i = 0; i < all_cnt; i++)
-		fread(alliance[i], sizeof(char[MAX_SIZE]), 1, fp);
-	printf("ID: %s / 나이:%d / hp:%d / 좌표:%.3f, %.3f\n",\
-	pl_ID, age, hp, x, y);	
-	printf("등록된 동맹 수: %d명\n",all_cnt);
-	for(i = 0; i < all_cnt-1; i++)
-		printf("%s / ", alliance[i]);
-	printf("%s\n", alliance[i]);
+	fseek(fp, -4,SEEK_END);
+	fread(&user_cnt, sizeof(int), 1, fp);
+	printf("숫자:%d\n", user_cnt);
+	fseek(fp, 0, SEEK_SET);
+	for(int k = 0; k < user_cnt; k++){
+		fread(pl_ID, sizeof(char), MAX_SIZE, fp);
+		fread(&age, sizeof(int), 1, fp);
+		fread(&hp, sizeof(int), 1, fp);
+		fread(&x, sizeof(double), 1, fp);
+		fread(&y, sizeof(double), 1, fp);
+		fread(&all_cnt, sizeof(int), 1, fp);
+		for(i = 0; i < all_cnt; i++)
+			fread(alliance[i], sizeof(char), MAX_SIZE, fp);
+		printf("[플레이어%d]\n", k+1);
+		printf("ID: %s / 나이:%d / hp:%d / 좌표:%.3f, %.3f\n",\
+				pl_ID, age, hp, x, y);	
+		printf("등록된 동맹 수: %d명\n",all_cnt);
+		for(i = 0; i < all_cnt-1; i++)
+			printf("%s / ", alliance[i]);
+		printf("%s\n\n", alliance[i]);
+		fseek(fp, 4, SEEK_CUR);
+	}
 	printf("완료되었습니다.\n");
 
 	fclose(fp);
