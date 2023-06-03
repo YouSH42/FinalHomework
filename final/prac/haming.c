@@ -18,11 +18,11 @@ unsigned short binary_output(char word){
 	for(i = 0; i < 8; i++)
 		bin[i] = word>>(7-i) & 1;
 	//잘 들어 갔는지 확인하는 함수	
-	/*
+	
 	for(i = 0; i < 8; i++)
 		printf("%d ", bin[i]);
 	printf("\n");
-	*/
+	
 	//패러티 비트에 해당하는 1의 갯수를 카운트
 	p1 = bin[7] + bin[6] + bin[4] + bin[3] + bin[1];
 	p2 = bin[7] + bin[5] + bin[4] + bin[2] + bin[1];
@@ -56,11 +56,12 @@ unsigned short binary_output(char word){
 			j--;
 		}
 	}
-	/*	배열에 잘 들어갔는지 확인하는 함수
+	//	배열에 잘 들어갔는지 확인하는 함수
+	/*
 	for(i = 0; i < 12; i++)
 		printf("%d ", haming[i]);
 	printf("\n");
-	*/
+	*/	
 	//output이라는 short형에 값을 저장	
 	output += (haming[0]) * 2048;
 	output += (haming[1]) * 1024;
@@ -79,25 +80,50 @@ unsigned short binary_output(char word){
 
 	return output;
 }
+// 2의 제곱수 구하는 함수
+int pow2(int value){
+	int result = 1;
+	for(int i = 0; i < value; i++)
+		result *=2;
+	return result;
+}
 
 unsigned short output_origin(unsigned short result){
 	//11=p1, 10=p2, 8=p3, 4=p4
 	char haming[12];
 	char bin[8] = {0, };
-	int j = 11, i, k = 0;
+	int j=11, i, k=0,  p[4]={0, }, syn=0, check=0;
 	unsigned short output = 0;
-
+	//비트값을 배열에 넣는 함수
 	for(i = 0; i < 12; i++)
 		haming[i] = result>>(11-i) & 1;
-	printf("haming\n");	
+	//	배열에 잘 들어 갔는지 확인
 	for(i = 0; i < 12; i++)
 		printf("%d ", haming[i]);
 	printf("\n");
-
+	
+	p[0] = haming[1] + haming[3] + haming[5] + haming[7] + haming[9] + haming[11];
+	p[1] = haming[1] + haming[2] + haming[5] + haming[6] + haming[9] + haming[10];
+	p[2] = haming[0] + haming[5] + haming[6] + haming[7] + haming[8];
+	p[3] = haming[0] + haming[1] + haming[2] + haming[3] + haming[4];
+	printf("p1: %d p2: %d p3: %d p4: %d\n",p[0], p[1], p[2], p[3]);
+	//오류가 있는 지 검사
+	for(i = 0; i < 4; i++){
+		if(p[i]%2 == 1)	check += 1 * pow2(3-i);
+		else if(p[i]%2 == 0) check += 0 * pow2(3-i);
+	}	
+	printf("check : %d\n", check);
+	if(check != 0){
+		if(haming[check] == 0) haming[check] = 1;
+		else if(haming[check] == 1) haming[check] = 0;
+	}
+	printf("check befor\n");
+	for(i = 0; i < 12; i++)
+		printf("%d ", haming[i]);
+	printf("\n");
 	for(i = 0; i <12; i++){
-		if(i==11||i==10||i==8||i==4){
+		if(i==11||i==10||i==8||i==4)
 			continue;
-		}
 		else{
 			bin[k] = haming[i];
 			k++;
@@ -126,7 +152,7 @@ int main(int argc, char* argv[]){
 	printf("문자를 입력하세요: ");
 	scanf("%c", &word);
 	result =  binary_output(word);
-	printf("result : %d\n", result);
+	//printf("result : %d\n", result);
 
 	unsigned short result_word = output_origin(result);
 	printf("result_word: %c\n", result_word);
